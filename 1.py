@@ -1,6 +1,7 @@
 import networkx as nx
 import matplotlib.pyplot as plt
 import pandas as pd
+import heapq
 
 G = nx.Graph()
 
@@ -92,10 +93,39 @@ bfs_path = bfs(G, 'A')
 print("DFS Path:", dfs_path)
 print("BFS Path:", bfs_path)
 
-# Алгоритм Дейкстры
-shortest_paths = dict(nx.all_pairs_dijkstra_path_length(G))
 
-shortest_paths_df = pd.DataFrame(shortest_paths).fillna(float('inf'))
+# Алгоритм Дейкстры
+def dijkstra(graph, start):
+
+    shortest_distances = {node: float('inf') for node in graph.nodes}
+    shortest_distances[start] = 0
+
+    priority_queue = [(0, start)]
+
+    while priority_queue:
+        current_distance, current_node = heapq.heappop(priority_queue)
+
+        if current_distance > shortest_distances[current_node]:
+            continue
+
+        for neighbor, data in graph[current_node].items():
+            distance = data['weight']
+            new_distance = current_distance + distance
+
+            if new_distance < shortest_distances[neighbor]:
+                shortest_distances[neighbor] = new_distance
+                heapq.heappush(priority_queue, (new_distance, neighbor))
+
+    return shortest_distances
+
+
+custom_shortest_paths = {}
+for station in G.nodes:
+    custom_shortest_paths[station] = dijkstra(G, station)
+
+custom_shortest_paths_df = pd.DataFrame(
+    custom_shortest_paths).fillna(float('inf'))
+
 
 print("\nShortest Path Distances between all stations:")
-print(shortest_paths_df)
+print(custom_shortest_paths_df)
